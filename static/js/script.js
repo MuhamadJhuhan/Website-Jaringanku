@@ -49,8 +49,23 @@ var paketData = {
 var layananMap = {pasang:'Pasang WiFi Baru',tambah:'Tambah Paket',perbaikan:'Perbaikan Jaringan',enterprise:'Paket Enterprise',pindah:'Pindah Alamat',cctv:'Pasang CCTV'};
 var selectedPaket = null;
 var currentFilter = 'rumah';
-var orders = JSON.parse(localStorage.getItem('jaringanku_orders') || '[]');
+var orders = [];
+function loadPesanan() {
 
+    fetch('/get_pesanan')
+    .then(response => response.json())
+    .then(data => {
+
+        orders = data;
+
+        renderPesananSaya();
+
+    })
+    .catch(error => {
+        console.error(error);
+    });
+
+}
 // ========== DEV PAGE ==========
 function renderDevPage() {
     var c = DEV_CONFIG;
@@ -99,16 +114,36 @@ function renderDevPage() {
 
 // ========== NAVIGATION ==========
 function navigateTo(page) {
-    if (page === 'status') { document.getElementById('page-status').classList.add('active'); return; }
+    if (page === 'status') {
+        document.getElementById('page-status').classList.add('active');
+        return;
+    }
+
     document.getElementById('page-status').classList.remove('active');
-    document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-    document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); n.classList.add('text-white/40'); });
+
+    document.querySelectorAll('.page').forEach(function(p) {
+        p.classList.remove('active');
+    });
+
+    document.querySelectorAll('.nav-item').forEach(function(n) {
+        n.classList.remove('active');
+        n.classList.add('text-white/40');
+    });
+
     var target = document.getElementById('page-' + page);
     if (target) target.classList.add('active');
+
     var navBtn = document.querySelector('.nav-item[data-page="' + page + '"]');
-    if (navBtn) { navBtn.classList.add('active'); navBtn.classList.remove('text-white/40'); }
+    if (navBtn) {
+        navBtn.classList.add('active');
+        navBtn.classList.remove('text-white/40');
+    }
+
     if (page === 'pesanan') updateOrderSummary();
+
     if (page === 'pengembang') renderDevPage();
+
+    if (page === 'keranjang') loadPesanan();
 }
 
 // ========== MOBILE MENU ==========
@@ -179,6 +214,7 @@ function submitOrder(e) {
     var mbps = selectedPaket ? selectedPaket.speed : 0;
     var order={id:oid,nama:nama,wa:wa,alamat:alamat,layanan:layanan,idPelanggan:idP,tanggal:tgl,catatan:cat,paket:selectedPaket?selectedPaket.name:'-',speed:selectedPaket?selectedPaket.speedLabel:'-',harga:selectedPaket?selectedPaket.price:0,status:'menunggu',createdAt:new Date().toISOString()};
     orders.push(order);localStorage.setItem('jaringanku_orders',JSON.stringify(orders));
+    renderPesananSaya();
     document.getElementById('order-form').reset();selectedPaket=null;document.getElementById('btn-order').disabled=true;
     document.getElementById('modal-title').textContent='Pesanan Berhasil!';
     document.getElementById('modal-msg').textContent='Pesanan #'+oid+' diterima. Tim kami hubungi via WhatsApp 1x24 jam.';
@@ -239,8 +275,114 @@ function simStatus() {
     localStorage.setItem('jaringanku_orders',JSON.stringify(orders));
 }
 
+function renderPesananSaya() {
+
+    var tbody = document.getElementById('tabel-pesanan');
+
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (orders.length === 0) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="py-6 text-center text-white/40">
+                    Belum ada pesanan
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+    orders.forEach(function(order) {
+
+        tbody.innerHTML += `
+            <tr class="border-b border-white/10">
+                <td class="py-3">${order.id}</td>
+                <td class="py-3">${order.nama}</td>
+                <td class="py-3">${order.layanan}</td>
+                <td class="py-3">${order.mbps}</td>
+               <td class="py-3 flex gap-2">
+    <button
+        onclick="editPesanan(${order.id})"
+        class="px-3 py-1 rounded bg-blue-500/20 text-blue-300 text-xs">
+        Edit
+    </button>
+
+    <button
+        onclick="hapusPesanan(${order.id})"
+        class="px-3 py-1 rounded bg-red-500/20 text-red-300 text-xs">
+        Hapus
+    </button>
+</td>
+            </tr>
+        `;
+    });
+
+}
+
+function editPesanan(id) {
+
+    const nama = prompt("Nama baru:");
+    const wa = prompt("WA baru:");
+    const alamat = prompt("Alamat baru:");
+    const layanan = prompt("Layanan baru:");
+    const mbps = prompt("Mbps baru:");
+
+    if (!nama) return;
+
+    fetch(`/edit_pesanan/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            nama: nama,
+            wa: wa,
+            alamat: alamat,
+            layanan: layanan,
+            mbps: mbps
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            loadPesanan();
+            showToast('Pesanan berhasil diupdate');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('Gagal update');
+    });
+}
+
+function hapusPesanan(id) {
+
+    if (!confirm('Hapus pesanan ini?')) return;
+
+    fetch(`/hapus_pesanan/${id}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.json())
+    .then(data => {
+
+        if (data.success) {
+            loadPesanan();
+            showToast('Pesanan berhasil dihapus');
+        }
+
+    })
+    .catch(error => {
+        console.error(error);
+        showToast('Terjadi kesalahan');
+    });
+}
+
 // ========== EVENTS ==========
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() { renderPesananSaya();
     lucide.createIcons();
     createParticles();
     renderPaket();
