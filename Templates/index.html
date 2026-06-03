@@ -6,7 +6,8 @@
     <title>JARINGANKU SARANA NUSANTARA</title>
     <link href="https://fonts.googleapis.com/css2?family=Afacad:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../static/css/styles.css">
+    <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
 
@@ -34,7 +35,6 @@
                 <button class="nav-item active text-[11px] uppercase tracking-widest" data-page="beranda">Beranda</button>
                 <button class="nav-item text-white/40 text-[11px] uppercase tracking-widest" data-page="layanan">Layanan</button>
                 <button class="nav-item text-white/40 text-[11px] uppercase tracking-widest" data-page="paket">Paket</button>
-                <button class="nav-item text-white/40 text-[11px] uppercase tracking-widest" data-page="pesanan">Pesanan</button>
                 <button class="nav-item text-white/40 text-[11px] uppercase tracking-widest" data-page="kontak">Kontak</button>
                 <button class="nav-item text-white/40 text-[11px] uppercase tracking-widest" data-page="pengembang">Pengembang</button>
             </div>
@@ -47,7 +47,6 @@
             <button class="mobile-nav-btn text-2xl font-semibold tracking-widest uppercase" data-page="beranda">Beranda</button>
             <button class="mobile-nav-btn text-2xl font-semibold tracking-widest uppercase text-white/50" data-page="layanan">Layanan</button>
             <button class="mobile-nav-btn text-2xl font-semibold tracking-widest uppercase text-white/50" data-page="paket">Paket</button>
-            <button class="mobile-nav-btn text-2xl font-semibold tracking-widest uppercase text-white/50" data-page="pesanan">Pesanan</button>
             <button class="mobile-nav-btn text-2xl font-semibold tracking-widest uppercase text-white/50" data-page="kontak">Kontak</button>
             <button class="mobile-nav-btn text-2xl font-semibold tracking-widest uppercase text-white/50" data-page="pengembang">Pengembang</button>
             <button id="mobile-menu-close" class="mt-8 text-white/30"><i data-lucide="x" class="w-8 h-8"></i></button>
@@ -193,6 +192,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../static/js/script.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 </html>

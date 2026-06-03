@@ -176,13 +176,37 @@ function submitOrder(e) {
     var nama=document.getElementById('f-nama').value,wa=document.getElementById('f-wa').value,alamat=document.getElementById('f-alamat').value,layanan=document.getElementById('f-layanan').value,idP=document.getElementById('f-id').value,tgl=document.getElementById('f-tanggal').value,cat=document.getElementById('f-catatan').value;
     if(!selectedPaket&&layanan==='Pasang WiFi Baru'){showToast('Pilih paket dulu','alert-circle');navigateTo('paket');return}
     var oid='JSN-'+Date.now().toString().slice(-5);
+    var mbps = selectedPaket ? selectedPaket.speed : 0;
     var order={id:oid,nama:nama,wa:wa,alamat:alamat,layanan:layanan,idPelanggan:idP,tanggal:tgl,catatan:cat,paket:selectedPaket?selectedPaket.name:'-',speed:selectedPaket?selectedPaket.speedLabel:'-',harga:selectedPaket?selectedPaket.price:0,status:'menunggu',createdAt:new Date().toISOString()};
     orders.push(order);localStorage.setItem('jaringanku_orders',JSON.stringify(orders));
     document.getElementById('order-form').reset();selectedPaket=null;document.getElementById('btn-order').disabled=true;
     document.getElementById('modal-title').textContent='Pesanan Berhasil!';
     document.getElementById('modal-msg').textContent='Pesanan #'+oid+' diterima. Tim kami hubungi via WhatsApp 1x24 jam.';
     document.getElementById('modal').classList.add('show');
-    setupStatusPage(order);
+    setupStatusPage(order); 
+
+
+   fetch('/simpan_pesanan', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        nama: nama,
+        wa: wa,
+        alamat: alamat,
+        layanan: layanan,
+        MBPS: mbps
+    })
+})
+    .then(response => response.json())
+    .then(data => {
+    console.log('Data berhasil disimpan');
+})
+    .catch(error => {
+    console.error('Error:', error);
+});
+
 }
 
 function closeModal(){document.getElementById('modal').classList.remove('show');navigateTo('status')}
